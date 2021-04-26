@@ -8,6 +8,7 @@ tf.compat.v1.enable_v2_behavior()
 
 if __name__ == '__main__':
     env = Dice21Env()
+
     tf_env = tf_py_environment.TFPyEnvironment(env)
 
     print("TimeStep Specs:", tf_env.time_step_spec())
@@ -16,7 +17,7 @@ if __name__ == '__main__':
     time_step = tf_env.reset()
     rewards = []
     steps = []
-    num_episodes = 5
+    num_episodes = 15
 
     for e in range(num_episodes):
         print("======================")
@@ -24,10 +25,15 @@ if __name__ == '__main__':
         episode_reward = 0
         episode_steps = 0
         while not time_step.is_last():
-            action = tf.random.uniform((), 0, 3, dtype=tf.int32)
+            print(f"observation: {time_step.observation}")
+            action = tf.random.uniform((), 0, 2, dtype=tf.int32)
             time_step = tf_env.step(action)
             episode_steps += 1
             episode_reward += time_step.reward.numpy()
+            print(f"action: {action}")
+            print(
+              f"reward: {time_step.reward}")
+
         rewards.append(episode_reward)
         steps.append(episode_steps)
         time_step = tf_env.reset()
