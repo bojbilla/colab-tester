@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from tf_agents.environments import py_environment
@@ -13,15 +13,12 @@ from GameState import GameState
 class Dice21Env(py_environment.PyEnvironment):
 
     def __init__(self):
-        # super().__init__()
+        self._episode_ended = False
         self._state = GameState()
         self._action_spec = array_spec.BoundedArraySpec(
-            shape=(), dtype=np.int32, minimum=0, maximum=2, name='action')
+            shape=(), dtype=np.int32, minimum=0, maximum=1, name='action')
         self._observation_spec = array_spec.BoundedArraySpec(
-            shape=(2,), dtype=np.int32, minimum=0, maximum=7, name='observation')
-
-    def get_info(self) -> Any:
-        print("state: ", self._state)
+            shape=(2,), dtype=np.int32, minimum=0, maximum=28, name='observation')
 
     def get_state(self) -> GameState:
         return self._state
@@ -51,23 +48,18 @@ class Dice21Env(py_environment.PyEnvironment):
             self._episode_ended = True
         elif action == Action.THROW_D1.value:
             new_dice = np.random.randint(1, 7)
-            self._state.set_d1(new_dice)
-        elif action == Action.THROW_D2.value:
-            new_dice = np.random.randint(1, 7)
-            self._state.set_d2(new_dice)
+            self._state.update(new_dice)
         else:
             raise ValueError('`action` invalid.')
 
         if self._episode_ended or self._state.get_score() >= 21:
-            reward = self._state.get_score() if self._state.get_score() <= 21 else -21
+            reward = self._state.get_score()/21 if self._state.get_score() <= 21 else -1
             return ts.termination(self._state.as_obs(), reward)
         else:
-            return ts.transition(
-                self._state.as_obs(), reward=0.0, discount=1.0)
+            return ts.transition(self._state.as_obs(), reward=0.001, discount=1)
 
 
 class Action(Enum):
     STOP = 0
     THROW_D1 = 1
-    THROW_D2 = 2
 
